@@ -1,5 +1,5 @@
 ﻿# DeezerRPC
-> A simple Deezer Rich Presence Cluent for Discord.
+> A simple Deezer Rich Presence Client for Discord.
 
 ![DeezerRPC](.github/assets/README.png)
 
