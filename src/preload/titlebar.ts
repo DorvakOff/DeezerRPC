@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
 import { Color, Titlebar } from 'custom-electron-titlebar';
+import path from "path";
 
 window.addEventListener('DOMContentLoaded', () => {
     createTitlebar();
@@ -11,9 +12,9 @@ function createTitlebar() {
         onMinimize: () => ipcRenderer.send('window-minimize'),
         onMaximize: () => ipcRenderer.send('window-maximize'),
         onClose: () => ipcRenderer.send('window-close'),
-        isMaximized: () => ipcRenderer.sendSync('window-is-maximized')
+        isMaximized: () => ipcRenderer.sendSync('window-is-maximized'),
+        icon: path.join(__dirname, '../assets/images/deezer.png'),
     });
 
     titlebar.updateTitle('Deezer');
-    titlebar.updateIcon('../assets/images/deezer.png')
 }

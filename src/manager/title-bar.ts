@@ -1,7 +1,7 @@
 import * as path from 'path';
-import { BrowserView, BrowserWindow, ipcMain } from 'electron';
+import {BrowserView, BrowserWindow, dialog, ipcMain} from 'electron';
 
-var titleBar: BrowserView | null = null;
+let titleBar: BrowserView | null = null;
 
 export function register() {
     if (titleBar == null) {
@@ -22,7 +22,9 @@ export function register() {
             height: 30
         });
 
-        titleBar.webContents.loadFile(path.join(__dirname, '../assets/titleBar.html'));
+        titleBar.webContents.loadFile(path.join(__dirname, '../assets/titleBar.html')).catch((error) => {
+            dialog.showErrorBox('Error', error.message);
+        })
 
         __mainWindow.setBrowserView(titleBar);
     }
