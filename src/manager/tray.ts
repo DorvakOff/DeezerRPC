@@ -1,9 +1,9 @@
 import path from 'path';
 import { APP } from '../app/app';
-import * as Update from '../util/update';
+import * as Update from '../utils/update';
 import * as Player from '../player/player';
 import { app, Menu, shell, Tray } from 'electron';
-import * as Preferences from '../util/preferences';
+import * as Preferences from '../utils/preferences';
 
 var tray: Tray;
 
@@ -11,7 +11,7 @@ export function register() {
 
     tray = new Tray(path.join(
         __dirname,
-        process.platform == 'win32' ? '../web/deezer.png' : '../web/deezer.png'
+        process.platform == 'win32' ? '../assets/images/deezer.ico' : '../assets/images/deezer.png'
     ));
 
     tray.setContextMenu(
@@ -39,7 +39,7 @@ export function register() {
                     {
                         type: 'normal',
                         label: 'Previous',
-                        click: () => Player.prevSong()
+                        click: () => Player.previousSong()
                     }
                 ]
             },
