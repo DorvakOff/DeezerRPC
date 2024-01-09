@@ -1,6 +1,6 @@
 {
   "name": "deezer-rpc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Deezer integrated with the Discord Rich Presence.",
   "main": "build/main.js",
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.dorvak.deezerrpc",
-    "asar": "true",
+    "asar": false,
     "productName": "DeezerRPC",
     "icon": "./assets/images/deezer.png",
     "files": [
