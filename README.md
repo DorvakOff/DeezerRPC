@@ -6,8 +6,7 @@
 ## Installation
 1. Download the latest release from [here](https://github.com/DorvakOff/DeezerRPC/releases/latest).
 2. Extract the archive.
-3. Run `DeezerRPC.exe`.
-4. Enjoy!
+3. On Windows, run `DeezerRPC.exe`. On Linux, run `DeezerRPC`. And on macOS, run `DeezerRPC.app`.
 
 # Shortcuts (keyboard)
 - Play/Pause : Pause/Resume the current song.
