@@ -159,5 +159,6 @@ $RECYCLE.BIN/
 # End of https://www.gitignore.io/api/node,linux,macos,windows
 
 # Custom
-dist/*
-build/*
+dist/
+build/
+.idea/

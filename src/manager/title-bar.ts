@@ -1,38 +1,38 @@
 import * as path from 'path';
 import { BrowserView, BrowserWindow, ipcMain } from 'electron';
 
-var titlebar: BrowserView | null = null;
+var titleBar: BrowserView | null = null;
 
 export function register() {
-    if (titlebar == null) {
-        titlebar = new BrowserView({
+    if (titleBar == null) {
+        titleBar = new BrowserView({
             webPreferences: {
-                preload: path.join(__dirname, '../preload/titlebar.js')
+                preload: path.join(__dirname, '../preload/titleBar.js')
             }
         });
 
-        titlebar.setAutoResize({
+        titleBar.setAutoResize({
             width: true
         });
 
-        titlebar.setBounds({
+        titleBar.setBounds({
             x: 0,
             y: 0,
             width: __mainWindow.getBounds().width,
             height: 30
         });
 
-        titlebar.webContents.loadFile(path.join(__dirname, '../web/titlebar.html'));
+        titleBar.webContents.loadFile(path.join(__dirname, '../assets/titleBar.html'));
 
-        __mainWindow.setBrowserView(titlebar);
+        __mainWindow.setBrowserView(titleBar);
     }
 }
 
 export function unregister() {
-    if (titlebar != null) {
-        __mainWindow.removeBrowserView(titlebar);
+    if (titleBar != null) {
+        __mainWindow.removeBrowserView(titleBar);
 
-        titlebar = null;
+        titleBar = null;
     }
 }
 

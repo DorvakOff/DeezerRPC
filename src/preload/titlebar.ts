@@ -15,4 +15,5 @@ function createTitlebar() {
     });
 
     titlebar.updateTitle('Deezer');
+    titlebar.updateIcon('../assets/images/deezer.png')
 }

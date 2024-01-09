@@ -18,7 +18,7 @@
     "appId": "com.dorvak.deezerrpc",
     "asar": "true",
     "productName": "DeezerRPC",
-    "icon": "./assets/deezer.png",
+    "icon": "./assets/images/deezer.png",
     "files": [
       "build/**/*"
     ],

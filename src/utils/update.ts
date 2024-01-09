@@ -1,7 +1,7 @@
 import got from 'got';
 import { APP } from '../app/app';
 import { dialog, shell } from 'electron';
-import * as Preferences from '../util/preferences';
+import * as Preferences from './/preferences';
 
 export async function checkVersion(fromUser: boolean) {
     try {
