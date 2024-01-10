@@ -1,4 +1,4 @@
-import {APP, resetRPC, RPC} from './app/app';
+import {APP, initializeRPC} from './app/app';
 import * as Tray from './manager/tray';
 import * as Update from './utils/update';
 import * as Player from './player/player';
@@ -125,13 +125,6 @@ export function getMainWindow() {
     return mainWindow;
 }
 
-function initializeRPC() {
-    RPC.login({clientId: APP.settings.discordClientID}).then(() => {
-        console.log('RPC initialized successfully');
-        setTimeout(Player.registerRPC, 3000);
-    }).catch(handleRPCError);
-}
-
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
@@ -150,10 +143,4 @@ if (!gotTheLock) {
     })
 
     app.on('ready', main);
-}
-
-export function handleRPCError() {
-    console.error('Failed to initialize RPC, retrying in 10 seconds...');
-    resetRPC()
-    setTimeout(initializeRPC, 10000);
 }
