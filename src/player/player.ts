@@ -7,7 +7,7 @@ import * as Tray from '../manager/tray';
 import {globalShortcut} from 'electron';
 import PlayerModel from '../model/player';
 import {setIntervalAsync} from 'set-interval-async/dynamic';
-import {loadThumbnailButtons} from "../main";
+import {getMainWindow, loadThumbnailButtons} from "../main";
 
 let LAST = '';
 let SONG: PlayerModel;
@@ -15,15 +15,15 @@ let RADIO_TIMESTAMP: number;
 let playing = false;
 
 export function togglePause() {
-    __mainWindow.webContents.executeJavaScript('dzPlayer.control.togglePause();').then(() => loadThumbnailButtons(!playing))
+    getMainWindow().webContents.executeJavaScript('dzPlayer.control.togglePause();').then(() => loadThumbnailButtons(!playing))
 }
 
 export function nextSong() {
-    __mainWindow.webContents.executeJavaScript('dzPlayer.control.nextSong();').then(() => loadThumbnailButtons(true))
+    getMainWindow().webContents.executeJavaScript('dzPlayer.control.nextSong();').then(() => loadThumbnailButtons(true))
 }
 
 export function previousSong() {
-    __mainWindow.webContents.executeJavaScript('dzPlayer.control.prevSong();').then(() => loadThumbnailButtons(true))
+    getMainWindow().webContents.executeJavaScript('dzPlayer.control.prevSong();').then(() => loadThumbnailButtons(true))
 }
 
 export function registerShortcuts() {
@@ -38,7 +38,7 @@ export function registerRPC() {
 
 async function updateRPC() {
     try {
-        let [current, listening, remaining] = await __mainWindow.webContents.executeJavaScript(`[
+        let [current, listening, remaining] = await getMainWindow().webContents.executeJavaScript(`[
                     dzPlayer.getCurrentSong(),
                     dzPlayer.isPlaying(),
                     dzPlayer.getRemainingTime()

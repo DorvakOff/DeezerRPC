@@ -4,11 +4,6 @@ import ElectronStore from 'electron-store';
 
 const PACKAGE = require('../../package.json');
 
-// Global
-declare global {
-    var __mainWindow: BrowserWindow;
-}
-
 // App
 export const APP = {
     name: 'DeezerRPC',
@@ -24,20 +19,40 @@ export const APP = {
     },
     preferences: {
         closeToTray: 'closeToTray',
-        minimizeToTray: 'minimizeToTray',
-        checkUpdates: 'checkUpdates'
+        checkUpdates: 'checkUpdates',
+        startOnStartup: 'startOnStartup',
     },
 };
 
 export const APP_CONFIG = new ElectronStore({
     defaults: {
         closeToTray: true,
-        minimizeToTray: true,
         checkUpdates: true,
+        startOnStartup: true,
     }
 });
 
 // RPC
-export const RPC = new Client({
+export let RPC = new Client({
     transport: 'ipc'
 });
+
+let firstTime = true;
+
+export function resetRPC() {
+    let newClient = new Client({
+        transport: 'ipc'
+    });
+
+    if (firstTime) {
+        firstTime = false;
+        RPC = newClient;
+        return;
+    }
+
+    RPC.destroy().then(() => {
+        RPC = newClient;
+    }).catch(() => {
+        RPC = newClient;
+    })
+}

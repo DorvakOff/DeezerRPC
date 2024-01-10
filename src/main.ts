@@ -1,67 +1,99 @@
-import {APP, RPC} from './app/app';
+import {APP, resetRPC, RPC} from './app/app';
 import * as Tray from './manager/tray';
 import * as Update from './utils/update';
 import * as Player from './player/player';
 import * as Window from './utils/http-utils';
 import * as TitleBar from './manager/title-bar';
 import * as Preferences from './utils/preferences';
-import {app, BrowserWindow, dialog} from 'electron';
+import {app, BrowserWindow, nativeImage} from 'electron';
 import path from "path";
-import {nativeImage} from "electron";
+import windowStateKeeper from "electron-window-state";
+import {setIntervalAsync} from "set-interval-async/dynamic";
+import {getPreference} from "./utils/preferences";
 
 // Entry
 function main() {
     createMainWindow();
 }
 
+let mainWindow: BrowserWindow
+
+// Create MainWindow
 function createMainWindow() {
-    // Create MainWindow
-    global.__mainWindow = new BrowserWindow({
-        width: APP.settings.windowWidth,
-        height: APP.settings.windowHeight,
+    let mainWindowStateKeeper = windowStateKeeper({
+        defaultHeight: APP.settings.windowHeight, defaultWidth: APP.settings.windowWidth
+    });
+    mainWindow = new BrowserWindow({
+        width: mainWindowStateKeeper.width,
+        height: mainWindowStateKeeper.height,
+        x: mainWindowStateKeeper.x,
+        y: mainWindowStateKeeper.y,
         show: false,
         title: APP.name,
         titleBarStyle: 'hidden',
         icon: path.join(__dirname, 'assets/images/deezer.ico'),
     });
+    // Save state
+    mainWindowStateKeeper.manage(mainWindow);
 
     // Load URL
-    __mainWindow.loadURL(APP.settings.deezerUrl, {userAgent: Window.userAgent()});
-
-    // Events
-    __mainWindow.webContents.once('did-finish-load', () => handleLoadComplete());
-    __mainWindow.on('show', () => TitleBar.register());
-    __mainWindow.on('hide', () => TitleBar.unregister())
-
-    __mainWindow.on('minimize', () => {
-        if (Preferences.getPreference<boolean>(APP.preferences.minimizeToTray)) {
-            __mainWindow.hide();
-        }
-    });
-    __mainWindow.on('close', (event) => {
-        event.preventDefault();
-        if (Preferences.getPreference<boolean>(APP.preferences.closeToTray)) {
-            __mainWindow.hide();
-        } else {
-            app.exit();
-        }
-    });
-}
-
-function handleLoadComplete() {
-    __mainWindow.show();
-
-    let css = `
+    mainWindow.loadURL(APP.settings.deezerUrl, {userAgent: Window.userAgent()}).then(() => {
+        let css = `
             .page-topbar, .css-efpag6, .tempo-topbar, #dzr-app {
                 margin-top: 30px !important;
             }
         `;
 
-    __mainWindow.webContents.insertCSS(css);
+        let javascript = `
+            if (document.head.querySelector('#deezer-rpc-css') == null) {
+                let css = document.createElement('style');
+                css.type = 'text/css';
+                css.innerHTML = \`${css}\`;
+                css.id = 'deezer-rpc-css';
+                document.head.appendChild(css);
+            }
+        `
 
-    setInterval(() => {
-        __mainWindow.webContents.insertCSS(css);
-    }, 1000);
+        setIntervalAsync(async () => {
+            try {
+                if (mainWindow.isVisible()) {
+                    await mainWindow.webContents.executeJavaScript(javascript);
+                }
+            } catch (e: any) {
+                console.error(e);
+            }
+        }, 1000);
+    });
+
+    // Events
+    mainWindow.webContents.once('did-finish-load', () => handleLoadComplete());
+    mainWindow.on('show', () => {
+        mainWindow.setPosition(mainWindowStateKeeper.x, mainWindowStateKeeper.y)
+        mainWindow.setSize(mainWindowStateKeeper.width, mainWindowStateKeeper.height)
+        TitleBar.register()
+    });
+    mainWindow.on('hide', () => {
+        mainWindowStateKeeper.saveState(mainWindow);
+        TitleBar.unregister()
+    })
+
+    mainWindow.on('minimize', () => {
+        mainWindow.hide();
+    });
+
+    mainWindow.on('close', (event) => {
+        event.preventDefault();
+        if (Preferences.getPreference<boolean>(APP.preferences.closeToTray)) {
+            mainWindow.hide();
+        } else {
+            app.exit();
+        }
+        mainWindowStateKeeper.saveState(mainWindow);
+    });
+}
+
+function handleLoadComplete() {
+    mainWindow.show();
 
     Tray.register();
     Player.registerShortcuts();
@@ -74,32 +106,52 @@ function handleLoadComplete() {
 }
 
 export function loadThumbnailButtons(playing: boolean = false) {
-    __mainWindow.setThumbarButtons([
-        {
-            tooltip: 'Previous',
-            icon: nativeImage.createFromPath(path.join(__dirname, 'assets/images/previous.png')),
-            click: () => Player.previousSong()
-        },
-        {
-            tooltip: 'Play/Pause',
-            icon: nativeImage.createFromPath(path.join(__dirname, `assets/images/${playing ? 'pause' : 'play'}.png`)),
-            click: () => Player.togglePause()
-        },
-        {
-            tooltip: 'Next',
-            icon: nativeImage.createFromPath(path.join(__dirname, 'assets/images/next.png')),
-            click: () => Player.nextSong()
-        }
-    ])
+    mainWindow.setThumbarButtons([{
+        tooltip: 'Previous',
+        icon: nativeImage.createFromPath(path.join(__dirname, 'assets/images/previous.png')),
+        click: () => Player.previousSong()
+    }, {
+        tooltip: 'Play/Pause',
+        icon: nativeImage.createFromPath(path.join(__dirname, `assets/images/${playing ? 'pause' : 'play'}.png`)),
+        click: () => Player.togglePause()
+    }, {
+        tooltip: 'Next',
+        icon: nativeImage.createFromPath(path.join(__dirname, 'assets/images/next.png')),
+        click: () => Player.nextSong()
+    }])
+}
+
+export function getMainWindow() {
+    return mainWindow;
 }
 
 function initializeRPC() {
     RPC.login({clientId: APP.settings.discordClientID}).then(() => {
+        console.log('RPC initialized successfully');
         setTimeout(Player.registerRPC, 3000);
     }).catch(() => {
-        dialog.showErrorBox("Rich Presence Login Failed", "Please, verify if your discord app is opened/working and relaunch this application.");
+        console.error('Failed to initialize RPC, retrying in 10 seconds...');
+        resetRPC()
+        setTimeout(initializeRPC, 10000);
     });
 }
 
-// App
-app.on('ready', main);
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+    app.quit()
+} else {
+    app.setLoginItemSettings({
+        openAtLogin: getPreference<boolean>(APP.preferences.startOnStartup),
+    })
+
+    app.on('second-instance', () => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    })
+
+    app.on('ready', main);
+}
