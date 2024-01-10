@@ -1,9 +1,12 @@
 import * as path from 'path';
 import {BrowserView, BrowserWindow, dialog, ipcMain} from 'electron';
+import {getMainWindow} from "../main";
 
 let titleBar: BrowserView | null = null;
 
 export function register() {
+    let mainWindow = getMainWindow()
+
     if (titleBar == null) {
         titleBar = new BrowserView({
             webPreferences: {
@@ -18,7 +21,7 @@ export function register() {
         titleBar.setBounds({
             x: 0,
             y: 0,
-            width: __mainWindow.getBounds().width,
+            width: mainWindow.getBounds().width,
             height: 30
         });
 
@@ -26,13 +29,13 @@ export function register() {
             dialog.showErrorBox('Error', error.message);
         })
 
-        __mainWindow.setBrowserView(titleBar);
+        mainWindow.setBrowserView(titleBar);
     }
 }
 
 export function unregister() {
     if (titleBar != null) {
-        __mainWindow.removeBrowserView(titleBar);
+        getMainWindow().removeBrowserView(titleBar);
 
         titleBar = null;
     }

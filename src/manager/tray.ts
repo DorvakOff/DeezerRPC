@@ -1,13 +1,14 @@
 import path from 'path';
 import { APP } from '../app/app';
 import * as Update from '../utils/update';
-import * as Player from '../player/player';
 import { app, Menu, shell, Tray } from 'electron';
 import * as Preferences from '../utils/preferences';
+import {getMainWindow} from "../main";
 
-var tray: Tray;
+let tray: Tray;
 
 export function register() {
+    let mainWindow = getMainWindow();
 
     tray = new Tray(path.join(
         __dirname,
@@ -19,40 +20,13 @@ export function register() {
             {
                 type: 'normal',
                 label: 'Toggle',
-                click: () => __mainWindow.isVisible() ? __mainWindow.hide() : __mainWindow.show()
+                click: () => mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
             },
             { type: 'separator' },
             {
                 type: 'submenu',
-                label: 'Player',
-                submenu: [
-                    {
-                        type: 'normal',
-                        label: 'Play/Pause',
-                        click: () => Player.togglePause()
-                    },
-                    {
-                        type: 'normal',
-                        label: 'Next',
-                        click: () => Player.nextSong()
-                    },
-                    {
-                        type: 'normal',
-                        label: 'Previous',
-                        click: () => Player.previousSong()
-                    }
-                ]
-            },
-            {
-                type: 'submenu',
                 label: 'Settings',
                 submenu: [
-                    {
-                        type: 'checkbox',
-                        label: 'Minimize to tray',
-                        checked: Preferences.getPreference<boolean>(APP.preferences.minimizeToTray),
-                        click: (item) => Preferences.setPreference(APP.preferences.minimizeToTray, item.checked)
-                    },
                     {
                         type: 'checkbox',
                         label: 'Close to tray',
@@ -65,6 +39,17 @@ export function register() {
                         checked: Preferences.getPreference<boolean>(APP.preferences.checkUpdates),
                         click: (item) => Preferences.setPreference(APP.preferences.checkUpdates, item.checked)
                     },
+                    {
+                        type: 'checkbox',
+                        label: 'Start on system startup',
+                        checked: Preferences.getPreference<boolean>(APP.preferences.startOnStartup),
+                        click: (item) => {
+                            Preferences.setPreference(APP.preferences.startOnStartup, item.checked)
+                            app.setLoginItemSettings({
+                                openAtLogin: item.checked
+                            })
+                        }
+                    }
                 ]
             },
             {
@@ -91,7 +76,7 @@ export function register() {
     setMessage(APP.name);
 
     // Events
-    tray.on('double-click', () => __mainWindow.isVisible() ? __mainWindow.hide() : __mainWindow.show());
+    tray.on('double-click', () => mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show());
 }
 
 export function setMessage(message: string) {
