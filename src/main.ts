@@ -129,11 +129,7 @@ function initializeRPC() {
     RPC.login({clientId: APP.settings.discordClientID}).then(() => {
         console.log('RPC initialized successfully');
         setTimeout(Player.registerRPC, 3000);
-    }).catch(() => {
-        console.error('Failed to initialize RPC, retrying in 10 seconds...');
-        resetRPC()
-        setTimeout(initializeRPC, 10000);
-    });
+    }).catch(handleRPCError);
 }
 
 const gotTheLock = app.requestSingleInstanceLock()
@@ -154,4 +150,10 @@ if (!gotTheLock) {
     })
 
     app.on('ready', main);
+}
+
+export function handleRPCError() {
+    console.error('Failed to initialize RPC, retrying in 10 seconds...');
+    resetRPC()
+    setTimeout(initializeRPC, 10000);
 }

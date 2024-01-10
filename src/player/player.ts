@@ -7,7 +7,7 @@ import * as Tray from '../manager/tray';
 import {globalShortcut} from 'electron';
 import PlayerModel from '../model/player';
 import {setIntervalAsync} from 'set-interval-async/dynamic';
-import {getMainWindow, loadThumbnailButtons} from "../main";
+import {getMainWindow, handleRPCError, loadThumbnailButtons} from "../main";
 
 let LAST = '';
 let SONG: PlayerModel;
@@ -51,7 +51,7 @@ async function updateRPC() {
         loadThumbnailButtons(listening);
 
         if (!SONG.listening) {
-            RPC.clearActivity();
+            RPC.clearActivity().catch(handleRPCError)
         } else {
             RPC.setActivity({
                 details: SONG.title,
@@ -64,7 +64,7 @@ async function updateRPC() {
                 smallImageText: 'DeezerRPC v' + APP.version,
                 buttons: SONG.getButtons(),
                 instance: false
-            });
+            }).catch(handleRPCError);
 
             if (LAST !== SONG.getId()) {
                 Tray.setMessage(SONG.trayMessage);
