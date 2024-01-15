@@ -1,6 +1,8 @@
-import { Client } from 'discord-rpc';
-import { BrowserWindow } from 'electron';
+import {Client} from 'discord-rpc';
 import ElectronStore from 'electron-store';
+import {SetIntervalAsyncTimer} from "set-interval-async";
+import {setIntervalAsync} from "set-interval-async/dynamic";
+import {updateRPC} from "../player/player";
 
 const PACKAGE = require('../../package.json');
 
@@ -18,41 +20,63 @@ export const APP = {
         discordClientID: '1193973433986449458'
     },
     preferences: {
-        closeToTray: 'closeToTray',
-        checkUpdates: 'checkUpdates',
-        startOnStartup: 'startOnStartup',
+        closeToTray: 'closeToTray', checkUpdates: 'checkUpdates', startOnStartup: 'startOnStartup',
     },
 };
 
 export const APP_CONFIG = new ElectronStore({
     defaults: {
-        closeToTray: true,
-        checkUpdates: true,
-        startOnStartup: true,
+        closeToTray: true, checkUpdates: true, startOnStartup: true,
     }
 });
 
-// RPC
-export let RPC = new Client({
-    transport: 'ipc'
-});
+let rpc: Client;
 
-let firstTime = true;
+export function getRPC() {
+    if (rpc == null) {
+        resetRPC();
+    }
+    return rpc;
+}
 
-export function resetRPC() {
-    let newClient = new Client({
+let connected = false;
+let timer: SetIntervalAsyncTimer
+
+export function isConnected() {
+    return connected;
+}
+
+function resetRPC() {
+    connected = false;
+    newClient()
+}
+
+function newClient() {
+    rpc = new Client({
         transport: 'ipc'
     });
+}
 
-    if (firstTime) {
-        firstTime = false;
-        RPC = newClient;
-        return;
+export function handleRPCError(reason: any) {
+    console.error('Failed to initialize RPC, retrying in 10 seconds... Reason: ' + reason.message);
+    resetRPC()
+    setTimeout(() => {
+        console.log('Retrying RPC initialization...');
+        initializeRPC();
+    }, 10_000);
+}
+
+export function initializeRPC() {
+    if (timer == null) {
+        timer = setIntervalAsync(updateRPC, 1_000);
     }
-
-    RPC.destroy().then(() => {
-        RPC = newClient;
-    }).catch(() => {
-        RPC = newClient;
-    })
+    try {
+        getRPC().login({clientId: APP.settings.discordClientID}).then(() => {
+            if (connected) return;
+            connected = true;
+            console.log('RPC initialized successfully');
+        }).catch(handleRPCError);
+    } catch (e) {
+        handleRPCError(e)
+    }
 }

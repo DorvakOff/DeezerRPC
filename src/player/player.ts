@@ -1,4 +1,4 @@
-import {APP, RPC} from '../app/app';
+import {APP, getRPC, handleRPCError, isConnected} from '../app/app';
 import Song from '../model/song';
 import Radio from '../model/radio';
 import Unknown from '../model/unknown';
@@ -6,7 +6,6 @@ import Episode from '../model/episode';
 import * as Tray from '../manager/tray';
 import {globalShortcut} from 'electron';
 import PlayerModel from '../model/player';
-import {setIntervalAsync} from 'set-interval-async/dynamic';
 import {getMainWindow, loadThumbnailButtons} from "../main";
 
 let LAST = '';
@@ -32,28 +31,24 @@ export function registerShortcuts() {
     globalShortcut.register('MediaPreviousTrack', () => previousSong());
 }
 
-export function registerRPC() {
-    setIntervalAsync(updateRPC, 1_000);
-}
+export async function updateRPC() {
+    let [current, listening, remaining] = await getMainWindow().webContents.executeJavaScript(`[ dzPlayer.getCurrentSong(),dzPlayer.isPlaying(), dzPlayer.getRemainingTime() ]`);
 
-async function updateRPC() {
+    playing = listening;
+
+    SONG = getSong(current, listening, remaining);
+
+    loadThumbnailButtons(listening);
+
+    if (!isConnected()) {
+        return;
+    }
+
     try {
-        let [current, listening, remaining] = await getMainWindow().webContents.executeJavaScript(`[
-                    dzPlayer.getCurrentSong(),
-                    dzPlayer.isPlaying(),
-                    dzPlayer.getRemainingTime()
-                ]`);
-
-        playing = listening;
-
-        SONG = getSong(current, listening, remaining);
-
-        loadThumbnailButtons(listening);
-
         if (!SONG.listening) {
-            RPC.clearActivity();
+            getRPC().clearActivity().catch(handleRPCError)
         } else {
-            RPC.setActivity({
+            getRPC().setActivity({
                 details: SONG.title,
                 state: SONG.getState(),
                 startTimestamp: SONG.getStartTimestamp(),
@@ -64,7 +59,7 @@ async function updateRPC() {
                 smallImageText: 'DeezerRPC v' + APP.version,
                 buttons: SONG.getButtons(),
                 instance: false
-            });
+            }).catch(handleRPCError);
 
             if (LAST !== SONG.getId()) {
                 Tray.setMessage(SONG.trayMessage);
@@ -72,7 +67,7 @@ async function updateRPC() {
             }
         }
     } catch (e) {
-        console.error(e);
+        handleRPCError(e)
     }
 }
 

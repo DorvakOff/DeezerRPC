@@ -1,4 +1,4 @@
-import {APP, resetRPC, RPC} from './app/app';
+import {APP, initializeRPC} from './app/app';
 import * as Tray from './manager/tray';
 import * as Update from './utils/update';
 import * as Player from './player/player';
@@ -38,11 +38,15 @@ function createMainWindow() {
 
     // Load URL
     mainWindow.loadURL(APP.settings.deezerUrl, {userAgent: Window.userAgent()}).then(() => {
-        let css = `
-            .page-topbar, .css-efpag6, .tempo-topbar, #dzr-app {
-                margin-top: 30px !important;
-            }
-        `;
+        let selectors = [
+            '.page-topbar',
+            '.css-efpag6',
+            '.tempo-topbar',
+            '#dzr-app',
+            '.mtZhp'
+        ];
+
+        let css = selectors.join(', ') + ' { margin-top: 30px !important; }';
 
         let javascript = `
             if (document.head.querySelector('#deezer-rpc-css') == null) {
@@ -71,6 +75,7 @@ function createMainWindow() {
         mainWindow.setPosition(mainWindowStateKeeper.x, mainWindowStateKeeper.y)
         mainWindow.setSize(mainWindowStateKeeper.width, mainWindowStateKeeper.height)
         TitleBar.register()
+        loadThumbnailButtons()
     });
     mainWindow.on('hide', () => {
         mainWindowStateKeeper.saveState(mainWindow);
@@ -78,7 +83,7 @@ function createMainWindow() {
     })
 
     mainWindow.on('minimize', () => {
-        mainWindow.hide();
+        mainWindow.minimize();
     });
 
     mainWindow.on('close', (event) => {
@@ -97,7 +102,6 @@ function handleLoadComplete() {
 
     Tray.register();
     Player.registerShortcuts();
-    loadThumbnailButtons()
 
     if (Preferences.getPreference<boolean>(APP.preferences.checkUpdates)) Update.checkVersion(false);
 
@@ -106,6 +110,9 @@ function handleLoadComplete() {
 }
 
 export function loadThumbnailButtons(playing: boolean = false) {
+    if (!mainWindow.isVisible()) {
+        return;
+    }
     mainWindow.setThumbarButtons([{
         tooltip: 'Previous',
         icon: nativeImage.createFromPath(path.join(__dirname, 'assets/images/previous.png')),
@@ -123,17 +130,6 @@ export function loadThumbnailButtons(playing: boolean = false) {
 
 export function getMainWindow() {
     return mainWindow;
-}
-
-function initializeRPC() {
-    RPC.login({clientId: APP.settings.discordClientID}).then(() => {
-        console.log('RPC initialized successfully');
-        setTimeout(Player.registerRPC, 3000);
-    }).catch(() => {
-        console.error('Failed to initialize RPC, retrying in 10 seconds...');
-        resetRPC()
-        setTimeout(initializeRPC, 10000);
-    });
 }
 
 const gotTheLock = app.requestSingleInstanceLock()

@@ -18,13 +18,8 @@
 
 ### Settings (tray / notifications icon)
 > Settings are available in the tray icon (located in the notification icons area)
-- Toggle: Shows or hides the DeezerRPC window.
-- Player: Manually control basic player actions outside main window.
-- Settings: Miscellaneous options like controlling how the window is minimized and checking for updates on startup.
-- Check for updates: Check if there is a new version available.
-- DeezerRPC [version]: Open this GitHub page.
-- Exit: Closes the application.
 
+Right click the tray icon to display the menu.
 
 ## Notes
 - This application is not affiliated with Deezer or Discord.
