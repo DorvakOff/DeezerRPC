@@ -1,6 +1,6 @@
 {
   "name": "deezer-rpc",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Deezer integrated with the Discord Rich Presence.",
   "main": "build/main.js",
   "scripts": {
@@ -11,9 +11,7 @@
     "start": "npm run build && electron ./build/main.js",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist-win": "npm run build && electron-builder --win",
-    "dist-mac": "npm run build && electron-builder --mac",
-    "dist-linux": "npm run build && electron-builder --linux"
+    "publish": "npm run build && electron-builder --win --publish always"
   },
   "build": {
     "appId": "com.dorvak.deezerrpc",
@@ -24,15 +22,14 @@
       "build/**/*"
     ],
     "win": {
-      "target": "nsis"
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.music"
-    },
-    "linux": {
-      "target": "AppImage",
-      "category": "Audio"
+      "target": "nsis",
+      "publish": [
+        {
+          "provider": "github",
+          "owner": "DorvakOff",
+          "repo": "DeezerRPC"
+        }
+      ]
     }
   },
   "repository": {
@@ -68,6 +65,7 @@
     "discord-rpc": "^4.0.1",
     "electron-settings": "^4.0.2",
     "electron-store": "^8.0.1",
+    "electron-updater": "^6.1.7",
     "electron-window-state": "^5.0.3",
     "got": "^11.8.2",
     "set-interval-async": "^2.0.3"

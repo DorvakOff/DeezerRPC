@@ -87,8 +87,7 @@ function createMainWindow() {
         mainWindow.minimize();
     });
 
-    mainWindow.on('close', (event) => {
-        event.preventDefault();
+    mainWindow.on('close', () => {
         if (Preferences.getPreference<boolean>(APP.preferences.closeToTray)) {
             mainWindow.hide();
         } else {
@@ -103,7 +102,7 @@ function handleLoadComplete() {
     registerShortcuts();
     TitleBar.register()
 
-    if (Preferences.getPreference<boolean>(APP.preferences.checkUpdates)) Update.checkVersion(false);
+    if (Preferences.getPreference<boolean>(APP.preferences.checkUpdates)) Update.checkVersion();
 
     // Initialize RPC
     initializeRPC();
