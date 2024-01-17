@@ -33,15 +33,6 @@ export function register() {
     }
 }
 
-export function unregister() {
-    if (titleBar != null) {
-        getMainWindow().removeBrowserView(titleBar);
-
-        titleBar = null;
-    }
-}
-
-
 // IPC
 ipcMain.on('window-minimize', (event) => {
     const window = BrowserWindow.fromWebContents(event.sender);

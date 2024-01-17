@@ -4,31 +4,16 @@ import Radio from '../model/radio';
 import Unknown from '../model/unknown';
 import Episode from '../model/episode';
 import * as Tray from '../manager/tray';
-import {globalShortcut} from 'electron';
 import PlayerModel from '../model/player';
 import {getMainWindow, loadThumbnailButtons} from "../main";
 
-let LAST = '';
-let SONG: PlayerModel;
-let RADIO_TIMESTAMP: number;
+let last = '';
+let song: PlayerModel;
+let radio_timestamp: number;
 let playing = false;
 
-export function togglePause() {
-    getMainWindow().webContents.executeJavaScript('dzPlayer.control.togglePause();').then(() => loadThumbnailButtons(!playing))
-}
-
-export function nextSong() {
-    getMainWindow().webContents.executeJavaScript('dzPlayer.control.nextSong();').then(() => loadThumbnailButtons(true))
-}
-
-export function previousSong() {
-    getMainWindow().webContents.executeJavaScript('dzPlayer.control.prevSong();').then(() => loadThumbnailButtons(true))
-}
-
-export function registerShortcuts() {
-    globalShortcut.register('MediaPlayPause', () => togglePause());
-    globalShortcut.register('MediaNextTrack', () => nextSong());
-    globalShortcut.register('MediaPreviousTrack', () => previousSong());
+export function isPlaying(): boolean {
+    return playing;
 }
 
 export async function updateRPC() {
@@ -36,7 +21,7 @@ export async function updateRPC() {
 
     playing = listening;
 
-    SONG = getSong(current, listening, remaining);
+    song = getSong(current, listening, remaining);
 
     loadThumbnailButtons(listening);
 
@@ -45,25 +30,25 @@ export async function updateRPC() {
     }
 
     try {
-        if (!SONG.listening) {
+        if (!song.listening) {
             getRPC().clearActivity().catch(handleRPCError)
         } else {
             getRPC().setActivity({
-                details: SONG.title,
-                state: SONG.getState(),
-                startTimestamp: SONG.getStartTimestamp(),
-                endTimestamp: SONG.getEndTimestamp(),
-                largeImageKey: SONG.getImageKey(),
-                largeImageText: SONG.getImageText(),
+                details: song.title,
+                state: song.getState(),
+                startTimestamp: song.getStartTimestamp(),
+                endTimestamp: song.getEndTimestamp(),
+                largeImageKey: song.getImageKey(),
+                largeImageText: song.getImageText(),
                 smallImageKey: 'logo',
                 smallImageText: 'DeezerRPC v' + APP.version,
-                buttons: SONG.getButtons(),
+                buttons: song.getButtons(),
                 instance: false
             }).catch(handleRPCError);
 
-            if (LAST !== SONG.getId()) {
-                Tray.setMessage(SONG.trayMessage);
-                LAST = SONG.getId();
+            if (last !== song.getId()) {
+                Tray.setMessage(song.trayMessage);
+                last = song.getId();
             }
         }
     } catch (e) {
@@ -73,9 +58,11 @@ export async function updateRPC() {
 
 function getSong(current: any, listening: boolean, remaining: number): PlayerModel {
     if (current?.LIVE_ID) {
-        if (`RADIO_${current.LIVE_ID}` != LAST) RADIO_TIMESTAMP = Math.floor(Date.now() / 1000);
+        if (`RADIO_${current.LIVE_ID}` != last) {
+            radio_timestamp = Math.floor(Date.now() / 1000);
+        }
 
-        return new Radio(current.LIVE_ID, current.LIVESTREAM_TITLE, listening, current.LIVESTREAM_IMAGE_MD5, RADIO_TIMESTAMP);
+        return new Radio(current.LIVE_ID, current.LIVESTREAM_TITLE, listening, current.LIVESTREAM_IMAGE_MD5, radio_timestamp);
     }
 
     if (current?.EPISODE_ID) {

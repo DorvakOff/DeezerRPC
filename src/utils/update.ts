@@ -1,48 +1,51 @@
-import got from 'got';
-import { APP } from '../app/app';
-import { dialog, shell } from 'electron';
-import * as Preferences from './/preferences';
+import {autoUpdater} from "electron-updater";
+import {APP} from "../app/app";
+import {getMainWindow} from "../main";
+import * as electron from "electron";
+import {dialog} from "electron";
 
-export async function checkVersion(fromUser: boolean) {
-    try {
-        const response = await got(APP.packageUrl);
+export function checkVersion(isManual: boolean = false) {
+    autoUpdater.autoDownload = true;
+    autoUpdater.checkForUpdatesAndNotify({
+        title: 'Deezer',
+        body: 'Checking for updates...'
+    }).then((result) => handleUpdateResult(result, isManual)).catch(handleUpdateError);
+}
 
-        const json = JSON.parse(response.body);
-
-        if (json.version != APP.version) {
-            return dialog.showMessageBox({
+function handleUpdateResult(result: any, isManual: boolean) {
+    if (result.updateInfo.version > APP.version) {
+        autoUpdater.downloadUpdate().then(() => {
+            dialog.showMessageBox(getMainWindow(), {
                 type: 'info',
-                buttons: [`Let's go`, 'Not now...'],
-                defaultId: 0,
-                title: `${APP.name} Updater`,
-                message: `Version ${json.version} is now available!`,
-                detail: 'Do you want to be redirected to update?',
-                checkboxLabel: `Don't show it again on startup.`,
-                checkboxChecked: !Preferences.getPreference<boolean>(APP.preferences.checkUpdates)
-            }).then(result => {
-                if (result.response == 0) {
-                    shell.openExternal(`${json.homepage}/releases/latest`);
+                title: 'Deezer',
+                message: 'Update downloaded. Restart the app to install the update.'
+            }).then(() => {
+                try {
+                    autoUpdater.quitAndInstall();
+                    setTimeout(() => {
+                        electron.app.relaunch();
+                        electron.app.exit(0);
+                    }, 6000)
+                } catch (e) {
+                    dialog.showMessageBox(getMainWindow(), {
+                        type: 'error',
+                        title: 'Deezer',
+                        message: 'Error while installing update.'
+                    })
                 }
-
-                Preferences.setPreference(APP.preferences.checkUpdates, !result.checkboxChecked)
-            });
-        } else {
-            if (fromUser) {
-                dialog.showMessageBox({
-                    type: 'info',
-                    title: `${APP.name} Updater`,
-                    message: 'You already have the latest version.'
-                });
-            }
-        }
-    } catch (error: any) {
-        if (fromUser) {
-            dialog.showMessageBox({
-                type: 'error',
-                title: `${APP.name} Updater`,
-                message: 'An error occurred while checking for updates.',
-                detail: "Please try again later."
-            });
+            })
+        })
+    } else {
+        if (isManual) {
+            dialog.showMessageBox(getMainWindow(), {
+                type: 'info',
+                title: 'Deezer',
+                message: 'You are up to date.'
+            })
         }
     }
+}
+
+function handleUpdateError(error: any) {
+    console.error(error);
 }
