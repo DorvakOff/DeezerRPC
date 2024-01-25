@@ -7,7 +7,7 @@ import {updateRPC} from "../player/player";
 const PACKAGE = require('../../package.json');
 
 // App
-export const APP = {
+const APP = {
     name: 'DeezerRPC',
     version: PACKAGE.version,
     homepage: PACKAGE.homepage,
@@ -24,7 +24,7 @@ export const APP = {
     },
 };
 
-export const APP_CONFIG = new ElectronStore({
+const APP_CONFIG = new ElectronStore({
     defaults: {
         closeToTray: true, checkUpdates: true, startOnStartup: true,
     }
@@ -32,7 +32,7 @@ export const APP_CONFIG = new ElectronStore({
 
 let rpc: Client;
 
-export function getRPC() {
+const getRPC = () => {
     if (rpc == null) {
         resetRPC();
     }
@@ -42,22 +42,22 @@ export function getRPC() {
 let connected = false;
 let timer: SetIntervalAsyncTimer
 
-export function isConnected() {
+const isConnected = () => {
     return connected;
 }
 
-function resetRPC() {
+const resetRPC = () => {
     connected = false;
     newClient()
 }
 
-function newClient() {
+const newClient = () => {
     rpc = new Client({
         transport: 'ipc'
     });
 }
 
-export function handleRPCError(reason: any) {
+const handleRPCError = (reason: any) => {
     console.error('Failed to initialize RPC, retrying in 10 seconds... Reason: ' + reason.message);
     resetRPC()
     setTimeout(() => {
@@ -66,7 +66,7 @@ export function handleRPCError(reason: any) {
     }, 10_000);
 }
 
-export function initializeRPC() {
+const initializeRPC = () => {
     if (timer == null) {
         timer = setIntervalAsync(updateRPC, 1_000);
     }
@@ -79,4 +79,8 @@ export function initializeRPC() {
     } catch (e) {
         handleRPCError(e)
     }
+}
+
+export {
+    APP, APP_CONFIG, getRPC, isConnected, initializeRPC, handleRPCError, resetRPC
 }

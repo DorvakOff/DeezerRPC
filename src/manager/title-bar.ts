@@ -4,7 +4,7 @@ import {getMainWindow} from "../main";
 
 let titleBar: BrowserView | null = null;
 
-export function register() {
+const register = () => {
     let mainWindow = getMainWindow()
 
     if (titleBar == null) {
@@ -59,3 +59,5 @@ ipcMain.on('window-is-maximized', (event) => {
 
     event.returnValue = window?.isMaximized();
 });
+
+export {register}

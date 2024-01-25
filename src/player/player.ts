@@ -12,11 +12,11 @@ let song: PlayerModel;
 let radio_timestamp: number;
 let playing = false;
 
-export function isPlaying(): boolean {
+const isPlaying = (): boolean => {
     return playing;
 }
 
-export async function updateRPC() {
+const updateRPC = async () => {
     let [current, listening, remaining] = await getMainWindow().webContents.executeJavaScript(`[ dzPlayer.getCurrentSong(),dzPlayer.isPlaying(), dzPlayer.getRemainingTime() ]`);
 
     playing = listening;
@@ -56,7 +56,7 @@ export async function updateRPC() {
     }
 }
 
-function getSong(current: any, listening: boolean, remaining: number): PlayerModel {
+const getSong = (current: any, listening: boolean, remaining: number): PlayerModel => {
     if (current?.LIVE_ID) {
         if (`RADIO_${current.LIVE_ID}` != last) {
             radio_timestamp = Math.floor(Date.now() / 1000);
@@ -76,7 +76,7 @@ function getSong(current: any, listening: boolean, remaining: number): PlayerMod
     return new Unknown(0, 'Unknown Title', false, undefined, undefined);
 }
 
-function timestamp(listening: boolean, remaining: number): number | undefined {
+const timestamp = (listening: boolean, remaining: number): number | undefined => {
     if (listening) {
         return Date.now() + (remaining * 1000);
     }
@@ -84,8 +84,10 @@ function timestamp(listening: boolean, remaining: number): number | undefined {
     return undefined;
 }
 
-function artists(artist: string, list: any[]): string {
-    let names = list?.map(o => o.ART_NAME).join(", ") || artist;
+const artists = (artist: string, list: any[]): string => {
+    let names = list.map(o => o.ART_NAME).join(", ") || artist;
 
     return names.length <= 128 ? names : artist;
 }
+
+export {updateRPC, isPlaying};

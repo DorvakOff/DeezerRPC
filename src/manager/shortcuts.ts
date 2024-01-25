@@ -20,8 +20,10 @@ const shortcuts = [
     }
 ]
 
-export function registerShortcuts() {
+const registerShortcuts = () => {
     shortcuts.forEach(shortcut => {
         globalShortcut.register(shortcut.key, shortcut.function)
     })
 }
+
+export {registerShortcuts}

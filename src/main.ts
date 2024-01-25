@@ -1,26 +1,21 @@
 import {APP, initializeRPC} from './app/app';
 import * as Tray from './manager/tray';
 import * as Update from './utils/update';
-import * as Window from './utils/http-utils';
 import * as TitleBar from './manager/title-bar';
 import * as Preferences from './utils/preferences';
+import {getPreference} from './utils/preferences';
 import {app, BrowserWindow, nativeImage} from 'electron';
 import path from "path";
 import windowStateKeeper from "electron-window-state";
-import {setIntervalAsync} from "set-interval-async/dynamic";
-import {getPreference} from "./utils/preferences";
 import {registerShortcuts} from "./manager/shortcuts";
 import {nextSong, previousSong, togglePause} from "./manager/functions";
-
-// Entry
-function main() {
-    createMainWindow();
-}
+import {applyCustomCSS} from "./manager/custom-css";
+import {userAgent} from "./utils/http-utils";
 
 let mainWindow: BrowserWindow
 
 // Create MainWindow
-function createMainWindow() {
+const createMainWindow = () => {
     let mainWindowStateKeeper = windowStateKeeper({
         defaultHeight: APP.settings.windowHeight, defaultWidth: APP.settings.windowWidth
     });
@@ -38,37 +33,7 @@ function createMainWindow() {
     mainWindowStateKeeper.manage(mainWindow);
 
     // Load URL
-    mainWindow.loadURL(APP.settings.deezerUrl, {userAgent: Window.userAgent()}).then(() => {
-        let selectors = [
-            '.page-topbar',
-            '.css-efpag6',
-            '.tempo-topbar',
-            '#dzr-app',
-            '.mtZhp'
-        ];
-
-        let css = selectors.join(', ') + ' { margin-top: 30px !important; }';
-
-        let javascript = `
-            if (document.head.querySelector('#deezer-rpc-css') == null) {
-                let css = document.createElement('style');
-                css.type = 'text/css';
-                css.innerHTML = \`${css}\`;
-                css.id = 'deezer-rpc-css';
-                document.head.appendChild(css);
-            }
-        `
-
-        setIntervalAsync(async () => {
-            try {
-                if (mainWindow.isVisible()) {
-                    await mainWindow.webContents.executeJavaScript(javascript);
-                }
-            } catch (e: any) {
-                console.error(e);
-            }
-        }, 1000);
-    });
+    mainWindow.loadURL(APP.settings.deezerUrl, {userAgent: userAgent()}).then(() => applyCustomCSS(mainWindow));
 
     // Events
     mainWindow.webContents.once('did-finish-load', handleLoadComplete);
@@ -97,7 +62,7 @@ function createMainWindow() {
     });
 }
 
-function handleLoadComplete() {
+const handleLoadComplete = () => {
     Tray.register();
     registerShortcuts();
     TitleBar.register()
@@ -108,7 +73,7 @@ function handleLoadComplete() {
     initializeRPC();
 }
 
-export function loadThumbnailButtons(playing: boolean = false) {
+const loadThumbnailButtons = (playing: boolean = false) => {
     if (!mainWindow.isVisible()) {
         return;
     }
@@ -127,7 +92,7 @@ export function loadThumbnailButtons(playing: boolean = false) {
     }])
 }
 
-export function getMainWindow() {
+const getMainWindow = () => {
     return mainWindow;
 }
 
@@ -148,5 +113,9 @@ if (!gotTheLock) {
         }
     })
 
-    app.on('ready', main);
+    app.on('ready', createMainWindow);
+}
+
+export {
+    getMainWindow, loadThumbnailButtons
 }

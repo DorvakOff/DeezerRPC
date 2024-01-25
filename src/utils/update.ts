@@ -4,7 +4,7 @@ import {getMainWindow} from "../main";
 import * as electron from "electron";
 import {dialog} from "electron";
 
-export function checkVersion(isManual: boolean = false) {
+const checkVersion = (isManual: boolean = false) => {
     autoUpdater.autoDownload = true;
     autoUpdater.checkForUpdatesAndNotify({
         title: 'Deezer',
@@ -12,7 +12,7 @@ export function checkVersion(isManual: boolean = false) {
     }).then((result) => handleUpdateResult(result, isManual)).catch(handleUpdateError);
 }
 
-function handleUpdateResult(result: any, isManual: boolean) {
+const handleUpdateResult = (result: any, isManual: boolean) => {
     if (result.updateInfo.version > APP.version) {
         autoUpdater.downloadUpdate().then(() => {
             dialog.showMessageBox(getMainWindow(), {
@@ -46,6 +46,10 @@ function handleUpdateResult(result: any, isManual: boolean) {
     }
 }
 
-function handleUpdateError(error: any) {
+const handleUpdateError = (error: any) => {
     console.error(error);
+}
+
+export {
+    checkVersion
 }
