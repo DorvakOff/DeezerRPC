@@ -7,7 +7,7 @@ import {getMainWindow} from "../main";
 
 let tray: Tray;
 
-export function register() {
+const register = () => {
     let mainWindow = getMainWindow();
 
     tray = new Tray(path.join(
@@ -17,12 +17,6 @@ export function register() {
 
     tray.setContextMenu(
         Menu.buildFromTemplate([
-            {
-                type: 'normal',
-                label: 'Toggle',
-                click: () => mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
-            },
-            { type: 'separator' },
             {
                 type: 'submenu',
                 label: 'Settings',
@@ -52,12 +46,12 @@ export function register() {
                     }
                 ]
             },
+            { type: 'separator' },
             {
                 type: 'normal',
                 label: 'Check for updates',
                 click: () => Update.checkVersion(true)
             },
-            { type: 'separator' },
             {
                 type: 'normal',
                 label: `${APP.name} ${APP.version}`,
@@ -79,6 +73,11 @@ export function register() {
     tray.on('double-click', () => mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show());
 }
 
-export function setMessage(message: string) {
+const setMessage = (message: string) => {
     tray.setToolTip(message);
+}
+
+export {
+    setMessage,
+    register
 }

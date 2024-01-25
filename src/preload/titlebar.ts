@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', () => {
     createTitlebar();
 });
 
-function createTitlebar() {
+const createTitlebar = () => {
     const titlebar = new Titlebar({
         backgroundColor: Color.fromHex("#23232d"),
         onMinimize: () => ipcRenderer.send('window-minimize'),

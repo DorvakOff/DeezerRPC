@@ -6,17 +6,18 @@ import Episode from '../model/episode';
 import * as Tray from '../manager/tray';
 import PlayerModel from '../model/player';
 import {getMainWindow, loadThumbnailButtons} from "../main";
+import {DeezerData} from "../model/deezer-data";
 
 let last = '';
 let song: PlayerModel;
 let radio_timestamp: number;
 let playing = false;
 
-export function isPlaying(): boolean {
+const isPlaying = (): boolean => {
     return playing;
 }
 
-export async function updateRPC() {
+const updateRPC = async () => {
     let [current, listening, remaining] = await getMainWindow().webContents.executeJavaScript(`[ dzPlayer.getCurrentSong(),dzPlayer.isPlaying(), dzPlayer.getRemainingTime() ]`);
 
     playing = listening;
@@ -56,27 +57,48 @@ export async function updateRPC() {
     }
 }
 
-function getSong(current: any, listening: boolean, remaining: number): PlayerModel {
-    if (current?.LIVE_ID) {
-        if (`RADIO_${current.LIVE_ID}` != last) {
-            radio_timestamp = Math.floor(Date.now() / 1000);
-        }
-
-        return new Radio(current.LIVE_ID, current.LIVESTREAM_TITLE, listening, current.LIVESTREAM_IMAGE_MD5, radio_timestamp);
+const getSong = (current: DeezerData, listening: boolean, remaining: number): PlayerModel => {
+    if (!current) {
+        return new Unknown(0, 'Unknown Title', false, undefined, undefined);
     }
 
-    if (current?.EPISODE_ID) {
-        return new Episode(current.EPISODE_ID, current.EPISODE_TITLE, listening, current.SHOW_ART_MD5, timestamp(listening, remaining), current.SHOW_NAME, current.EPISODE_DESCRIPTION);
-    }
+    let type = current.LIVE_ID ? 'radio' : current.EPISODE_ID ? 'episode' : current.SNG_ID ? 'song' : 'unknown';
 
-    if (current?.SNG_ID) {
-        return new Song(current.SNG_ID, current.SNG_TITLE, listening, current.ALB_PICTURE, timestamp(listening, remaining), current.ALB_TITLE, artists(current.ART_NAME, current.ARTISTS));
+    switch (type) {
+        case 'radio':
+            return getRadio(current, listening);
+        case 'episode':
+            return getEpisode(current, listening, remaining);
+        case 'song':
+            return getSongModel(current, listening, remaining);
+        default:
+            return new Unknown(0, 'Unknown Title', false, undefined, undefined);
     }
-
-    return new Unknown(0, 'Unknown Title', false, undefined, undefined);
 }
 
-function timestamp(listening: boolean, remaining: number): number | undefined {
+const getRadio = (data: DeezerData, listening: boolean): Radio => {
+    if (`RADIO_${data.LIVE_ID}` != last) {
+        radio_timestamp = Math.floor(Date.now() / 1000);
+    }
+
+    return new Radio(data.LIVE_ID!, data.LIVESTREAM_TITLE, listening, data.LIVESTREAM_IMAGE_MD5, radio_timestamp);
+}
+
+const getEpisode = (data: DeezerData, listening: boolean, remaining: number): Episode => {
+    return new Episode(data.EPISODE_ID!, data.EPISODE_TITLE, listening, data.SHOW_ART_MD5, timestamp(listening, remaining), data.SHOW_NAME, data.EPISODE_DESCRIPTION);
+}
+
+const getSongModel = (data: DeezerData, listening: boolean, remaining: number): Song => {
+    let names = data.ARTISTS.map((o: any) => o.ART_NAME).join(", ") || data.ART_NAME;
+
+    if (names.length > 128) {
+        names = data.ART_NAME;
+    }
+
+    return new Song(data.SNG_ID!, data.SNG_TITLE, listening, data.ALB_PICTURE, timestamp(listening, remaining), data.ALB_TITLE, names);
+}
+
+const timestamp = (listening: boolean, remaining: number): number | undefined => {
     if (listening) {
         return Date.now() + (remaining * 1000);
     }
@@ -84,8 +106,4 @@ function timestamp(listening: boolean, remaining: number): number | undefined {
     return undefined;
 }
 
-function artists(artist: string, list: any[]): string {
-    let names = list?.map(o => o.ART_NAME).join(", ") || artist;
-
-    return names.length <= 128 ? names : artist;
-}
+export {updateRPC, isPlaying};

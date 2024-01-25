@@ -10,7 +10,7 @@ export default abstract class PlayerModel {
     trayMessage: string = '';
     notification: string = '';
 
-    constructor(
+    protected constructor(
         id: number,
         title: string,
         listening: boolean,
