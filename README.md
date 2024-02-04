@@ -2,7 +2,7 @@
 > A simple Deezer Rich Presence Client for Discord.
 
 ## Support Server
-![Discord Banner](https://discordapp.com/api/guilds/1194044765596045324/widget.png?style=banner2)
+[![Discord Banner](https://discordapp.com/api/guilds/1194044765596045324/widget.png?style=banner2)](https://discord.dorvak.com)
 
 ## Showcase
 ![DeezerRPC](.github/assets/README.png)
