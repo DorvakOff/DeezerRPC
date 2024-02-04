@@ -1,9 +1,9 @@
 import path from 'path';
 import { APP } from '../app/app';
-import * as Update from '../utils/update';
 import { app, Menu, shell, Tray } from 'electron';
 import * as Preferences from '../utils/preferences';
 import {getMainWindow} from "../main";
+import {autoUpdater} from "electron-updater";
 
 let tray: Tray;
 
@@ -50,7 +50,7 @@ const register = () => {
             {
                 type: 'normal',
                 label: 'Check for updates',
-                click: () => Update.checkVersion(true)
+                click: () => autoUpdater.checkForUpdates()
             },
             {
                 type: 'normal',

@@ -1,16 +1,16 @@
 import {APP, initializeRPC} from './app/app';
 import * as Tray from './manager/tray';
-import * as Update from './utils/update';
 import * as TitleBar from './manager/title-bar';
 import * as Preferences from './utils/preferences';
 import {getPreference} from './utils/preferences';
-import {app, BrowserWindow, nativeImage} from 'electron';
+import {app, BrowserWindow, dialog, nativeImage} from 'electron';
 import path from "path";
 import windowStateKeeper from "electron-window-state";
 import {registerShortcuts} from "./manager/shortcuts";
 import {nextSong, previousSong, togglePause} from "./manager/functions";
 import {applyCustomCSS} from "./manager/custom-css";
 import {userAgent} from "./utils/http-utils";
+import {autoUpdater, UpdateDownloadedEvent} from "electron-updater";
 
 let mainWindow: BrowserWindow
 
@@ -67,11 +67,36 @@ const handleLoadComplete = () => {
     registerShortcuts();
     TitleBar.register()
 
-    if (Preferences.getPreference<boolean>(APP.preferences.checkUpdates)) Update.checkVersion();
+    if (Preferences.getPreference<boolean>(APP.preferences.checkUpdates)) {
+        autoUpdater.checkForUpdates();
+        setInterval(() => autoUpdater.checkForUpdates(), 1000 * 60, [autoUpdater]);
+    }
 
     // Initialize RPC
     initializeRPC();
 }
+
+autoUpdater.on('update-downloaded', (event: UpdateDownloadedEvent) => {
+    const dialogOpts = {
+        type: 'info',
+        buttons: ['Restart', 'Later'],
+        title: 'Application Update',
+        message: `${APP.name} will be updated to version ${event.version} after restart.`,
+        detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+    }
+
+    dialog.showMessageBox(dialogOpts).then((returnValue) => {
+        if (returnValue.response === 0) {
+            autoUpdater.quitAndInstall()
+        }
+    })
+})
+
+autoUpdater.on('error', error => {
+    console.error('There was a problem updating the application')
+    console.error(error)
+    dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString())
+})
 
 const loadThumbnailButtons = (playing: boolean = false) => {
     if (!mainWindow.isVisible()) {
