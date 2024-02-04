@@ -50,6 +50,9 @@ const updateRPC = async () => {
             if (last !== song.getId()) {
                 Tray.setMessage(song.trayMessage);
                 last = song.getId();
+
+                // Set os specific media controls (play/pause, next, previous, current song, icon)
+
             }
         }
     } catch (e) {

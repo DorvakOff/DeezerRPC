@@ -7,7 +7,8 @@ const applyCustomCSS = (mainWindow: BrowserWindow) => {
         '.css-efpag6',
         '.tempo-topbar',
         '#dzr-app',
-        '.mtZhp'
+        '.mtZhp',
+        '.ab-in-app-message'
     ];
 
     let css = ''
