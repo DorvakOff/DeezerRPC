@@ -1,8 +1,11 @@
 ﻿# DeezerRPC
 > A simple Deezer Rich Presence Client for Discord.
 
-![DeezerRPC](.github/assets/README.png)
+## Support Server
+![Discord Banner](https://discordapp.com/api/guilds/1194044765596045324/widget.png?style=banner2)
 
+## Showcase
+![DeezerRPC](.github/assets/README.png)
 
 ## Installation
 1. Download the latest release from [here](https://github.com/DorvakOff/DeezerRPC/releases/latest).
